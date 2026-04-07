@@ -1,0 +1,63 @@
+# ClinicalRAG Requirements
+# Install: pip install -e ".[dev]"
+# Or directly: pip install -r requirements.txt
+
+# Core ML
+torch>=2.0.0
+transformers>=4.38.0
+accelerate>=0.26.0
+sentence-transformers>=2.5.0
+datasets>=2.17.0
+
+# Embeddings & Vector Store
+faiss-cpu>=1.7.4          # Use faiss-gpu for GPU acceleration
+chromadb>=0.4.22          # ChromaDB vector database (optional)
+
+# Biomedical NLP
+scispacy>=0.5.3
+# Install biomedical models separately:
+#   pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.3/en_core_sci_lg-0.5.3.tar.gz
+#   pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.3/en_ner_bc5cdr_md-0.5.3.tar.gz
+spacy>=3.7.0
+
+# LLM APIs
+openai>=1.12.0             # OpenAI GPT-4 / GPT-3.5
+
+# Data handling
+requests>=2.31.0
+pyyaml>=6.0.1
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Evaluation
+rouge-score>=0.1.2
+bert-score>=0.3.13
+evaluate>=0.4.1
+seqeval>=1.2.2
+
+# Hallucination detection
+# (uses transformers NLI models — no extra install needed)
+
+# Quantization (optional, for running large models locally)
+# bitsandbytes>=0.41.0    # For load_in_8bit / load_in_4bit
+# peft>=0.8.0             # For LoRA fine-tuning
+
+# Development
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=24.1.0
+isort>=5.13.0
+mypy>=1.7.0
+pre-commit>=3.5.0
+
+# Utilities
+tqdm>=4.66.0
+python-dotenv>=1.0.0
+click>=8.1.7               # CLI utilities
+rich>=13.7.0               # Pretty terminal output
+
+# Optional: QuickUMLS for UMLS query expansion
+# quickumls>=1.4.0          # Requires UMLS installation
+
+# Optional: Weights & Biases for training monitoring
+# wandb>=0.17.0

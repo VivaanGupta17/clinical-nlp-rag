@@ -1,0 +1,199 @@
+# ClinicalRAG Configuration
+# All paths are relative to repository root
+
+# ─── Data ────────────────────────────────────────────────────────────────────
+data:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  cache_dir: data/cache
+
+# ─── PubMed Ingestion ────────────────────────────────────────────────────────
+pubmed:
+  api_key: null  # Set NCBI_API_KEY env var or provide here
+  email: researcher@institution.edu
+  batch_size: 200
+  cache_ttl_hours: 72
+
+  # Default MeSH terms for full-pipeline download
+  default_mesh_terms:
+    - "Artificial Intelligence"
+    - "Machine Learning"
+    - "Clinical Decision Support Systems"
+    - "Natural Language Processing"
+    - "Deep Learning"
+    - "Drug Interactions"
+    - "Adverse Drug Reaction Reporting Systems"
+
+  date_range:
+    start: "2015"
+    end: "2024"
+  max_results_per_term: 2000
+
+# ─── MIMIC-III ───────────────────────────────────────────────────────────────
+mimic:
+  noteevents_path: data/raw/NOTEEVENTS.csv  # Requires PhysioNet credentials
+  note_types:
+    - "Discharge summary"
+    - "Radiology"
+    - "Physician"
+  max_notes: null  # null = all notes
+  apply_deidentification: true
+  deidentification:
+    replacement_token: "[REDACTED]"
+    strict_mode: false
+
+# ─── Chunking ────────────────────────────────────────────────────────────────
+chunking:
+  strategy: semantic  # 'sentence', 'semantic', 'section'
+  chunk_size: 512     # tokens
+  overlap: 64         # tokens
+  min_chunk_size: 50  # tokens
+
+  semantic_chunking:
+    breakpoint_percentile: 85.0
+
+  section_chunking:
+    min_section_length: 30
+
+# ─── Embeddings ──────────────────────────────────────────────────────────────
+embedding:
+  model_id: pubmedbert  # See MODEL_REGISTRY in biomedical_embedder.py
+  # Options: pubmedbert, pubmedbert-abstract, medcpt-article, medcpt-query,
+  #          specter2, bioclinicalbert, biolinkbert, general
+  batch_size: 32
+  max_length: 512
+  normalize: true
+  pooling: mean       # 'mean' or 'cls'
+  use_cache: true
+  device: auto        # 'auto', 'cuda', 'cpu'
+
+  # Asymmetric retrieval: use different models for queries vs documents
+  asymmetric:
+    enabled: false
+    query_model: medcpt-query
+    document_model: medcpt-article
+
+# ─── Vector Index ────────────────────────────────────────────────────────────
+index:
+  path: data/indices/pubmed_ai_cds
+  type: hybrid  # 'faiss_flat', 'faiss_ivf', 'faiss_hnsw', 'chromadb', 'hybrid'
+
+  faiss:
+    index_type: flat    # 'flat', 'ivf', 'hnsw' (flat for <100K docs, ivf for >100K)
+    nlist: 100          # IVF cells (sqrt(N) is a good starting point)
+    nprobe: 10          # IVF cells to probe (higher = more accurate, slower)
+    m: 16               # HNSW connectivity
+    ef_construction: 200
+
+  bm25:
+    k1: 1.5
+    b: 0.75
+
+  hybrid:
+    rrf_k: 60
+    dense_weight: 0.7
+    sparse_weight: 0.3
+
+# ─── Retrieval ───────────────────────────────────────────────────────────────
+retrieval:
+  initial_fetch_k: 50          # Candidates before re-ranking
+
+  use_reranker: true
+  reranker_model: cross-encoder/ms-marco-MiniLM-L-12-v2
+  # Biomedical option: ncbi/MedCPT-Cross-Encoder
+  # Accurate option:   cross-encoder/ms-marco-electra-base
+
+  use_query_expansion: true
+  use_quickumls: false         # Set true if QuickUMLS is installed
+  max_synonyms_per_term: 5
+
+  metadata_filters: {}         # e.g., source: pubmed, pub_date_year_gte: 2020
+
+# ─── Generation ──────────────────────────────────────────────────────────────
+generation:
+  provider: openai            # 'openai', 'azure_openai', 'huggingface'
+  model: gpt-4o-mini
+  temperature: 0.1
+  max_tokens: 1024
+  include_disclaimer: true
+  max_context_chunks: 8
+  max_context_tokens: 3000
+  citation_style: inline
+
+  # HuggingFace local model settings (if provider = huggingface)
+  huggingface:
+    model: microsoft/biogpt
+    device: auto
+    load_in_4bit: false        # Enable for large models on limited VRAM
+    load_in_8bit: false
+
+  # Azure OpenAI (if provider = azure_openai)
+  azure:
+    endpoint: null             # Set AZURE_OPENAI_ENDPOINT env var
+    deployment: null           # Set AZURE_OPENAI_DEPLOYMENT env var
+
+# ─── Hallucination Detection ─────────────────────────────────────────────────
+hallucination:
+  enabled: true
+  nli_model: cross-encoder/nli-deberta-v3-small
+  entailment_threshold: 0.7
+  faithfulness_threshold: 0.7  # Below this, add extra warning
+  block_threshold: 0.3         # Below this, refuse to return answer
+  use_llm_verification: false  # More accurate, uses additional API calls
+
+# ─── NER ─────────────────────────────────────────────────────────────────────
+ner:
+  enabled: true
+  use_scispacy: true
+  use_bert: false
+  scispacy_model: en_ner_bc5cdr_md  # Drug + Disease entities
+  bert_model: d4data/biomedical-ner-all
+  add_umls_linking: false           # Requires UMLS KB installation
+  min_confidence: 0.5
+
+# ─── Relation Extraction ─────────────────────────────────────────────────────
+relation_extraction:
+  enabled: true
+  extract_ddi: true
+  extract_adr: true
+  extract_gene_disease: true
+  min_confidence: 0.6
+
+# ─── Evaluation ──────────────────────────────────────────────────────────────
+evaluation:
+  k_values: [1, 5, 10]
+  compute_bertscore: false     # Slow; set true for final evaluation
+  output_dir: results/
+
+  benchmarks:
+    bioasq:
+      enabled: false
+      data_path: data/benchmarks/bioasq/
+      max_examples: 500
+    pubmedqa:
+      enabled: false
+      use_hf_dataset: true
+      max_examples: 500
+    medqa:
+      enabled: false
+      data_path: data/benchmarks/medqa/
+      max_examples: 500
+    i2b2:
+      enabled: false
+      data_dir: data/benchmarks/i2b2/
+
+# ─── Logging ─────────────────────────────────────────────────────────────────
+logging:
+  level: INFO
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+  log_file: logs/clinicalrag.log
+
+# ─── HIPAA Compliance ────────────────────────────────────────────────────────
+hipaa:
+  audit_logging: true
+  audit_log_path: logs/clinical_access_audit.log
+  encrypt_cached_notes: false   # Set true in production environments
+  allowed_note_types:           # Restrict which note types can be indexed
+    - discharge_summary
+    - radiology
+    - physician

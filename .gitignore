@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data — never commit raw or processed clinical data
+data/raw/
+data/processed/
+data/cache/
+data/indices/
+
+# Model weights — too large for git
+models/
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+
+# Evaluation results — tracked separately
+results/
+
+# Logs
+logs/
+*.log
+
+# Environment variables — NEVER commit API keys
+.env
+.env.local
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.xml
+
+# Type checking
+.mypy_cache/
+
+# Pre-commit
+.pre-commit-config.yaml.bak
+
+# HIPAA compliance: never commit de-identified or identifiable PHI data
+# Even de-identified data should remain on credentialed systems
+data/raw/NOTEEVENTS.csv
+data/raw/ADMISSIONS.csv
+data/raw/PATIENTS.csv
+data/**/*.csv
