@@ -582,3 +582,29 @@ def compare_embedders(
             results[model_id] = {"error": str(exc)}
 
     return results
+
+
+import hashlib
+import pickle
+from pathlib import Path
+
+
+def cache_embeddings_to_disk(texts: list, embeddings, cache_dir: str = ".embedding_cache") -> None:
+    """Persist embeddings to disk keyed by content hash."""
+    cache_path = Path(cache_dir)
+    cache_path.mkdir(parents=True, exist_ok=True)
+    key = hashlib.md5("".join(texts).encode()).hexdigest()
+    with open(cache_path / f"{key}.pkl", "wb") as f:
+        pickle.dump({"texts": texts, "embeddings": embeddings}, f)
+
+
+def load_embeddings_from_cache(texts: list, cache_dir: str = ".embedding_cache"):
+    """Return cached embeddings if available, else None."""
+    cache_path = Path(cache_dir)
+    key = hashlib.md5("".join(texts).encode()).hexdigest()
+    fpath = cache_path / f"{key}.pkl"
+    if fpath.exists():
+        with open(fpath, "rb") as f:
+            data = pickle.load(f)
+        return data["embeddings"]
+    return None
