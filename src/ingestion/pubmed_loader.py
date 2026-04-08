@@ -675,3 +675,5 @@ class PubMedBatchDownloader:
             output_path,
         )
         return output_path
+
+NCBI_RATE_LIMIT = 0.4  # seconds between requests
