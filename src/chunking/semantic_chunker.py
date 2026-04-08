@@ -600,3 +600,5 @@ class ChunkerFactory:
                 f"Unknown chunking strategy '{strategy}'. "
                 "Choose from: 'sentence', 'semantic', 'section'."
             )
+
+DEFAULT_CHUNK_SIZE = 512
