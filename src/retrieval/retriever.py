@@ -582,3 +582,24 @@ class HybridRetriever:
             query_expander=query_expander,
             initial_fetch_k=retrieval_cfg.get("initial_fetch_k", 50),
         )
+
+
+import logging as _logging
+
+_retriever_log = _logging.getLogger("clinical_rag.retriever")
+_retriever_log.setLevel(_logging.INFO)
+
+if not _retriever_log.handlers:
+    _h = _logging.StreamHandler()
+    _h.setFormatter(_logging.Formatter("%(asctime)s %(levelname)s [retriever] %(message)s"))
+    _retriever_log.addHandler(_h)
+
+
+def log_retrieval_event(query: str, n_results: int, latency_ms: float) -> None:
+    """Log a retrieval call with basic telemetry."""
+    _retriever_log.info(
+        "query=%r  n_results=%d  latency_ms=%.1f",
+        query[:80],
+        n_results,
+        latency_ms,
+    )
