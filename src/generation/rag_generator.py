@@ -35,8 +35,6 @@ from typing import Any, AsyncIterator, Dict, Generator, List, Optional, Union
 from src.vectorstore.vector_index import RetrievalResult
 
 logger = logging.getLogger(__name__)
-
-
 # ---------------------------------------------------------------------------
 # Data models
 # ---------------------------------------------------------------------------
@@ -67,8 +65,6 @@ class Citation:
         if note_id:
             return f"[Clinical Note: {note_id}]"
         return f"[{self.chunk_id}]"
-
-
 @dataclass
 class GeneratedAnswer:
     """
@@ -102,8 +98,6 @@ class GeneratedAnswer:
         for i, cite in enumerate(self.citations, 1):
             lines.append(f"  [{i}] {cite.formatted}")
         return "\n".join(lines)
-
-
 # ---------------------------------------------------------------------------
 # Prompt templates
 # ---------------------------------------------------------------------------
@@ -160,8 +154,6 @@ CLINICAL_DISCLAIMER = (
     "treatment recommendations. Always consult qualified healthcare professionals for "
     "clinical decision-making."
 )
-
-
 # ---------------------------------------------------------------------------
 # LLM providers
 # ---------------------------------------------------------------------------
@@ -266,8 +258,6 @@ class OpenAIProvider:
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
-
-
 class HuggingFaceProvider:
     """
     Local HuggingFace model provider.
@@ -357,8 +347,6 @@ class HuggingFaceProvider:
             return_full_text=False,
         )
         return outputs[0]["generated_text"].strip()
-
-
 # ---------------------------------------------------------------------------
 # RAG generator
 # ---------------------------------------------------------------------------
